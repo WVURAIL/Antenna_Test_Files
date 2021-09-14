@@ -178,7 +178,7 @@ while i == "1":
         serial_num_2=serial_num+"_P2"
         m="S11"
         output_power="HIGH"
-        S11, S11_raw = measure_s_parameter(m, output_power,serial_num_1, start_freq=start_freq, stop_freq=stop_freq)
+        S11, S11_raw = measure_s_parameter(m, output_power,serial_num_2, start_freq=start_freq, stop_freq=stop_freq)
        
         f = np.linspace(start_freq,stop_freq,S11_raw.shape[-1])
         nw2 = rf.Network(name=f"{serial_num_2}",s=S11_raw,frequency=f, z0=50)
@@ -187,7 +187,7 @@ while i == "1":
        
         #plot a smith chart of s11
         nw2.plot_s_smith()
-        plt.title(f"{serial_num_1} Smith Chart")
+        plt.title(f"{serial_num_2} Smith Chart")
         plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Smith_Charts\\{serial_num_2}.jpg")
 
 
