@@ -2,7 +2,7 @@
 #@Purpose:Measure_S11.py: A script designed to test Chime feed antennas for S11. The script walks you through
 #testing of antennas, saves files and graphs locally then uploads touchstone files to github.
 #
-#@Authors: Pranav Sanghavani and Joseph Shepard
+#@Authors: Pranav Sanghavi and Joseph Shepard
 #
 #@Date: 9/13/2021
 ###############################################
