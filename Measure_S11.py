@@ -68,7 +68,7 @@ def measure_s_parameter(measurement, output_power,serial_num, start_freq, stop_f
     plt.ylabel("dBm")
     plt.title(f"{measurement}_{serial_num}")
     print(f"DONE measuring {measurement}")
-    plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing_2021\\S11_Plots\\{measurement}_{serial_num}.png")
+    plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\S11_Plots\\{measurement}_{serial_num}.png")
     VNA.write(':CALCulate:SELected:FORMat REAL')
     time.sleep(1)
     data_real = VNA.query('CALCulate:DATA:FDaTa?')
