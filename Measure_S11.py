@@ -68,7 +68,7 @@ def measure_s_parameter(measurement, output_power,serial_num, start_freq, stop_f
     plt.ylabel("dBm")
     plt.title(f"{measurement}_{serial_num}")
     print(f"DONE measuring {measurement}")
-    plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\S11_Plots\\{measurement}_{serial_num}.png")
+    plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing_2021\\S11_Plots\\{measurement}_{serial_num}.png")
     VNA.write(':CALCulate:SELected:FORMat REAL')
     time.sleep(1)
     data_real = VNA.query('CALCulate:DATA:FDaTa?')
@@ -166,12 +166,12 @@ while i == "1":
         f = np.linspace(start_freq,stop_freq,S11_raw.shape[-1])
         nw2 = rf.Network(name=f"{serial_num_1}",s=S11_raw,frequency=f, z0=50)
         print(nw2)
-        nw2.write_touchstone(filename = f"{serial_num_1}",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files')
+        nw2.write_touchstone(filename = f"{serial_num_1}",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing_2021\\Touchstone_Files')
        
         #plot a smith chart of s11
         nw2.plot_s_smith()
         plt.title(f"{serial_num_1} Smith Chart")
-        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Smith_Charts\\{serial_num_1}.jpg")
+        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing_2021\\Smith_Charts\\{serial_num_1}.jpg")
 
         print("Please Connect VNA to P2!")
         z= input("Please Connect VNA to P2!Press enter when Finished: ")
@@ -183,12 +183,12 @@ while i == "1":
         f = np.linspace(start_freq,stop_freq,S11_raw.shape[-1])
         nw2 = rf.Network(name=f"{serial_num_2}",s=S11_raw,frequency=f, z0=50)
         print(nw2)
-        nw2.write_touchstone(filename = f"{serial_num_2}",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files')
+        nw2.write_touchstone(filename = f"{serial_num_2}",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing_2021\\Touchstone_Files')
        
         #plot a smith chart of s11
         nw2.plot_s_smith()
         plt.title(f"{serial_num_2} Smith Chart")
-        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Smith_Charts\\{serial_num_2}.jpg")
+        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing_2021\\Smith_Charts\\{serial_num_2}.jpg")
 
 
         
