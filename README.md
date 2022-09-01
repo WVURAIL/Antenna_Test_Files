@@ -15,8 +15,11 @@ Step 3-
   Then type: 
     CD Desktop
     CD Enigma_Testing
-    Activate RAILVNA
+    # NO NEED TO USE THIS    Activate RAILVNA
     Python Measure_S11.py
+    
+    ![image](https://user-images.githubusercontent.com/43184800/187933052-71428003-19f7-4abb-ab3f-2fc2288673fc.png)
+
     
 Then follow the on screen instructions to aqquire test data for the antennas. 
 The serial number can be found on the antenna label. 
