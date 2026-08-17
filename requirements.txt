@@ -1,0 +1,7 @@
+# Compatible ranges for the archived acquisition and plotting utilities.
+# A VISA vendor backend/driver must be installed separately for hardware access.
+matplotlib>=3.6,<4
+numpy>=1.23,<3
+Pillow>=9.2,<13
+PyVISA>=1.13,<2
+scikit-rf>=0.29,<2

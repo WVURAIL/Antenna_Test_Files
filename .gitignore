@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+# Measurement data IS tracked on purpose -- .s1p Touchstone files and the
+# plots generated from them are what this repository exists to hold. Only
+# incidental files are excluded above.
