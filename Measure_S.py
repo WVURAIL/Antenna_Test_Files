@@ -1,204 +1,280 @@
-############################################
-#@Purpose:Measure_S11.py: A script designed to test Chime feed antennas for S11. The script walks you through
-#testing of antennas, saves files and graphs locally then uploads touchstone files to github.
-#
-#@Authors: Pranav Sanghavi and Joseph Shepard
-#
-#@Date: 9/13/2021
-###############################################
+"""Interactively acquire a complete two-port S-parameter measurement.
 
-import numpy as np
-import os 
-import skrf as rf
+This legacy LNA utility is safe to import: hardware is opened only from
+:func:`main`. FieldFox SCPI reference:
+https://helpfiles.keysight.com/csg/FFProgrammingHelpWebHelp/Programming_the_FieldFox.htm
+"""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+import time
+
 import matplotlib.pyplot as plt
-import time
-import pyvisa as visa
-import csv
-import time
-import base64
-from github import Github
-from github import InputGitTreeElement
+import numpy as np
+import pyvisa
+import skrf as rf
 
 
-def set_freq_lims(start, stop):
-            VNA.write('SENSe:FREQuency:STARt ' + str(start))
-            VNA.write('SENSe:FREQuency:STOp ' + str(stop))
-            """
-                Set frequency limits of measurement
-                Commands:
-                http://na.support.keysight.com/pna/help/latest/Programming/GP-IB_Command_Finder/Sense/Frequency.htm
-            """
-def check_power_mode():
-    print(f"Current Output power is{VNA.query('SOURce:POWer:ALC:MODE?')}")
-    """
-    CHECK POWER MODE
-    """
-def set_power_mode(output_power, nominal_power = -15):
-    print(f"Setting output power to {output_power}")
-    VNA.write('SOURce:POWer:ALC:MODE ' + str(output_power))
-    check_power_mode()
-    if str(output_power) == "MAN":
-        print(f"Setting nominal power level {nominal_power}")
-# define a 2x2 s-matrix at a given frequency
-def measure_s_parameter(measurement, output_power,serial_num, start_freq, stop_freq):
-    print("setting frequency limits")
-    set_freq_lims(start_freq,stop_freq)
-    check_power_mode()
-    set_power_mode(output_power)
-    print(f"Measuring {measurement} with Output mode {output_power}")
-    VNA.write(':CALCulate:PARameter1:DEFine ' + measurement)
-    # http://na.support.keysight.com/pna/help/latest/Programming/GP-IB_Command_Finder/Calculate/Parameter.htm COMMANDS FOR MEASUREMENT PARAMETERS
-    VNA.write(':CALCulate:SELected:FORMat MLOGarithmic')
-    # MLINear, MLOGarithmic, PHASe, UPHase 'Unwrapped phase, IMAGinary,REAL
-    # POLar SMITh, SADMittance 'Smith Admittance, SWR, GDELay 'Group Delay
-    # http://na.support.keysight.com/pna/help/latest/Programming/GP-IB_Command_Finder/Calculate/Format_Calc.htm
+DEFAULT_START_HZ = 10_000_000.0
+DEFAULT_STOP_HZ = 2_000_000_000.0
+S_PARAMETERS = ("S11", "S12", "S21", "S22")
+
+
+def set_freq_lims(vna, start_hz: float, stop_hz: float) -> None:
+    """Set the analyzer sweep limits in hertz."""
+    vna.write(f"SENSe:FREQuency:STARt {start_hz}")
+    vna.write(f"SENSe:FREQuency:STOp {stop_hz}")
+
+
+def set_power_mode(vna, output_power: str) -> None:
+    """Set and report the analyzer's automatic-level-control mode."""
+    print(f"Setting output power mode to {output_power}")
+    vna.write(f"SOURce:POWer:ALC:MODE {output_power}")
+    mode = vna.query("SOURce:POWer:ALC:MODE?").strip()
+    print(f"Current output power mode is {mode}")
+
+
+def _query_trace(vna) -> np.ndarray:
+    """Return the selected formatted trace as floating-point values."""
+    response = vna.query("CALCulate:DATA:FDaTa?")
+    values = [value.strip() for value in response.strip().split(",")]
+    return np.asarray([float(value) for value in values if value], dtype=float)
+
+
+def measure_s_parameter(
+    vna,
+    measurement: str,
+    serial_num: str,
+    start_hz: float,
+    stop_hz: float,
+    output_directory: Path,
+    show_plots: bool,
+) -> np.ndarray:
+    """Acquire one complex S-parameter trace and save its magnitude plot."""
+    set_freq_lims(vna, start_hz, stop_hz)
+    set_power_mode(vna, "LOW")
+    print(f"Measuring {measurement}")
+    vna.write(f":CALCulate:PARameter1:DEFine {measurement}")
+    vna.write(":CALCulate:SELected:FORMat MLOGarithmic")
     time.sleep(1)
-    VNA.write(':DISPlay:WINDow:TRACe:Y:SCALe:AUTO')# scaling plot on the VNA screen
-    #### OTHER VNA COMMANDS THAT CONTROL THE SCREEN
-    # http://na.support.keysight.com/pna/help/latest/Programming/GP-IB_Command_Finder/Display.htm#yauto
-    ##########
-    data = VNA.query('CALCulate:DATA:FDaTa?')
-    ### http://na.support.keysight.com/pna/help/latest/Programming/GP-IB_Command_Finder/Calculate/Data.htm # COMMANDS TO SAVE DATA
-    data = data_real = np.asarray(data.split(',')[:-1] + [data.split(',')[-1][:-1]])   
-    data = np.array([float(i.lower()) for i in data])
+    vna.write(":DISPlay:WINDow:TRACe:Y:SCALe:AUTO")
+    magnitude_db = _query_trace(vna)
 
-    plt.figure()
-    plt.plot(np.linspace(start_freq/1e6,stop_freq/1e6,data.shape[-1]),data)
-    plt.xlabel("MHz")
-    plt.ylabel("dBm")
-    plt.title(f"{measurement}_{serial_num}")
-    print(f"DONE measuring {measurement}")
-    plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA\\{measurement}_{serial_num}.png")
-    VNA.write(':CALCulate:SELected:FORMat REAL')
-    time.sleep(1)
-    data_real = VNA.query('CALCulate:DATA:FDaTa?')
-    data_real = np.asarray(data_real.split(',')[:-1] + [data_real.split(',')[-1][:-1]])   
-    VNA.write(':CALCulate:SELected:FORMat IMAG')
-    time.sleep(1)
-    data_imag = VNA.query('CALCulate:DATA:FDaTa?')
-    data_imag = np.asarray(data_imag.split(',')[:-1] + [data_imag.split(',')[-1][:-1]])   
-    data_raw = np.array([float(i[0].lower())+float(i[1].lower())*1j  for i in zip(data_real,data_imag)])
-    plt.show()
-    return data, data_raw
-
-i="1"
-while i == "1":
-    con = input("Please Connect the VNA and ensure it is powered on! Once connected press y: ")
-    if con == 'y':
-        ##############################################################################
-        # load visa library 
-        rm=visa.ResourceManager('C:\\Windows\\System32\\visa64.dll') # windows
-        # TODO linux
-        # https://edadocs.software.keysight.com/kkbopen/linux-io-libraries-faq-589309025.html
-        # https://www.keysight.com/us/en/lib/software-detail/computer-software/io-libraries-suite-downloads-2175637.html click linux 
-        # 
-        print(rm.list_resources())# find connected instrument and get instrument address
-        instrument_address = rm.list_resources()
-        VNA = rm.open_resource(instrument_address[0])# load  instrument object
-        VNA.write('*IDN?')
-        IDN=VNA.read()
-        print(IDN)
-        VNA.timeout = 10000
-        # # select NA mode
-        # ```
-        # Relevant Modes
-        #  ALL
-        #  
-        # Parameters
-        #   
-        #  
-        # <string>
-        #  Operating Mode. Case-sensitive. Choose from the modes that are installed on your FieldFox:
-        # 
-        # "CAT"
-        # "IQ"
-        # "NA"
-        # "SA"
-        # "Power Meter"
-        # "VVM"
-        # "Pulse Measurements"
-        # "ERTA"
-        #  
-        # Examples
-        #  INST "NA";*OPC?
-        #  ```
-        # 
-        # common commands: http://na.support.keysight.com/pna/help/latest/Programming/GP-IB_Command_Finder/Common_Commands.htm
-        print(VNA.query('INSTrument:CATalog?'))# print available modes of intrsument
-      
-        VNA.write('INST "NA";*OPC?')# set in network analyzer mode 
-        
-        if VNA.read()[0] == '1':
-            print("Successfully set NA mode")
-
-
-
-       
-       
-        # ```
-        # For NA Mode:
-        # Reverse measurements are available ONLY with full S-parameter option.
-        # 
-        # S11 - Forward reflection measurement
-        # S21 - Forward transmission measurement
-        # S12 - Reverse transmission
-        # S22 - Reverse reflection
-        # A - A receiver measurement
-        # B - B receiver measurement
-        # R1 - Port 1 reference receiver measurement
-        # R2 - Port 2 reference receiver measurement
-        # ```
-        ##########################################################################
-        ## set start and stop freq
-
-        start_freq = 1e7
-        stop_freq = 2e9
-        set_freq_lims(start_freq,stop_freq)
-        ##########################################################################
-
-        serial_num= input("Please Enter LNA Serial Number: ")
-        z = input("Please Connect VNA to LNA! Press Enter when Finished: ")
-        serial_num_1=serial_num
-        
-        output_power="LOW"
-        m="S11"
-        S11, S11_raw = measure_s_parameter(m, output_power,serial_num_1, start_freq=start_freq, stop_freq=stop_freq)
-        m="S12"
-        S12, S12_raw = measure_s_parameter(m, output_power,serial_num_1, start_freq=start_freq, stop_freq=stop_freq)
-        m="S21"
-        S21, S21_raw = measure_s_parameter(m, output_power,serial_num_1, start_freq=start_freq, stop_freq=stop_freq)
-        m="S22"
-        S22, S22_raw = measure_s_parameter(m, output_power,serial_num_1, start_freq=start_freq, stop_freq=stop_freq)
-       
-        f = np.linspace(start_freq,stop_freq,S11_raw.shape[-1])
-        nw2 = rf.Network(name=f"{serial_num_1}_S11",s=S11_raw,frequency=f, z0=50)
-        nw3 = rf.Network(name=f"{serial_num_1}_S12",s=S12_raw,frequency=f, z0=50)
-        nw4 = rf.Network(name=f"{serial_num_1}_S21",s=S21_raw,frequency=f, z0=50)
-        nw5 = rf.Network(name=f"{serial_num_1}_S22",s=S22_raw,frequency=f, z0=50)
-
-        print(nw2)
-
-        nw2.write_touchstone(filename = f"{serial_num_1}_S11",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
-        nw3.write_touchstone(filename = f"{serial_num_1}_S12",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
-        nw4.write_touchstone(filename = f"{serial_num_1}_S21",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
-        nw5.write_touchstone(filename = f"{serial_num_1}_S22",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
-        s = np.zeros((len(f), 2, 2))
-        s[:,0,0] = S11_raw
-        s[:,0,1] = S12_raw
-        s[:,1,0] = S21_raw
-        s[:,1,1] = S22_raw
-        nw6 = rf.Network(name=f"{serial_num_1}_S22",s=s,frequency=f, z0=50)
-        serial_num_2 = "Bandura_LNA"
-        nw6.write_touchstone(filename = f"{serial_num_1}",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
-        plt.title(f"{serial_num_2} S Parameters")
-
-        plot2 = nw2.plot_s_db(m=0,n=0, label='S11')
-        plot2 = nw3.plot_s_db(m=0,n=0, label='S12')
-        plot2 = nw4.plot_s_db(m=0,n=0, label='S21')
-        plot2 = nw5.plot_s_db(m=0,n=0, label='S22')
-        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA\\{serial_num_2}multi_comparison.jpg")
+    frequencies_mhz = np.linspace(
+        start_hz / 1e6, stop_hz / 1e6, magnitude_db.size
+    )
+    figure, axis = plt.subplots()
+    axis.plot(frequencies_mhz, magnitude_db)
+    axis.set_xlabel("Frequency (MHz)")
+    axis.set_ylabel(f"{measurement} magnitude (dB)")
+    axis.set_title(f"{measurement}_{serial_num}")
+    figure.savefig(
+        output_directory / f"{measurement}_{serial_num}.png",
+        bbox_inches="tight",
+    )
+    if show_plots:
         plt.show()
-        
-        
-    i= input("Finsihed? Press 0. Test again? Press 1 : ")
+    plt.close(figure)
+
+    vna.write(":CALCulate:SELected:FORMat REAL")
+    time.sleep(1)
+    real = _query_trace(vna)
+    vna.write(":CALCulate:SELected:FORMat IMAG")
+    time.sleep(1)
+    imaginary = _query_trace(vna)
+    if real.size != imaginary.size:
+        raise RuntimeError("VNA returned different REAL and IMAG trace lengths")
+    print(f"Done measuring {measurement}")
+    return real + 1j * imaginary
+
+
+def _one_port_network(
+    name: str, trace: np.ndarray, frequency: rf.Frequency
+) -> rf.Network:
+    """Build a one-port network without relying on implicit array reshaping."""
+    return rf.Network(
+        name=name,
+        s=trace[:, np.newaxis, np.newaxis],
+        frequency=frequency,
+        z0=50,
+    )
+
+
+def _save_measurement_set(
+    serial_num: str,
+    traces: dict[str, np.ndarray],
+    start_hz: float,
+    stop_hz: float,
+    output_directory: Path,
+    show_plots: bool,
+) -> None:
+    """Write individual traces, a complex two-port file, and a comparison plot."""
+    point_counts = {trace.size for trace in traces.values()}
+    if len(point_counts) != 1:
+        raise RuntimeError("S-parameter traces have different point counts")
+    point_count = point_counts.pop()
+    frequency_values = np.linspace(start_hz, stop_hz, point_count)
+    frequency = rf.Frequency.from_f(frequency_values, unit="Hz")
+
+    networks = {
+        parameter: _one_port_network(
+            f"{serial_num}_{parameter}", trace, frequency
+        )
+        for parameter, trace in traces.items()
+    }
+    for network in networks.values():
+        network.write_touchstone(filename=network.name, dir=str(output_directory))
+
+    # Preserve complex phase by declaring the matrix's dtype explicitly.
+    s_matrix = np.zeros((point_count, 2, 2), dtype=complex)
+    s_matrix[:, 0, 0] = traces["S11"]
+    s_matrix[:, 0, 1] = traces["S12"]
+    s_matrix[:, 1, 0] = traces["S21"]
+    s_matrix[:, 1, 1] = traces["S22"]
+    two_port = rf.Network(
+        name=serial_num,
+        s=s_matrix,
+        frequency=frequency,
+        z0=50,
+    )
+    two_port.write_touchstone(filename=serial_num, dir=str(output_directory))
+
+    figure, axis = plt.subplots()
+    for parameter in S_PARAMETERS:
+        networks[parameter].plot_s_db(
+            m=0,
+            n=0,
+            label=parameter,
+            ax=axis,
+        )
+    axis.set_title(f"{serial_num} S Parameters")
+    figure.savefig(
+        output_directory / f"{serial_num}_multi_comparison.jpg",
+        bbox_inches="tight",
+    )
+    if show_plots:
+        plt.show()
+    plt.close(figure)
+
+
+def _open_vna(args: argparse.Namespace):
+    """Open the requested VISA resource and configure network-analyzer mode."""
+    manager = (
+        pyvisa.ResourceManager(args.visa_library)
+        if args.visa_library
+        else pyvisa.ResourceManager()
+    )
+    resources = manager.list_resources()
+    resource_name = args.resource or (resources[0] if resources else None)
+    if resource_name is None:
+        manager.close()
+        raise RuntimeError(
+            "No VISA instruments found; provide one explicitly with --resource"
+        )
+
+    print(f"Opening VISA resource {resource_name}")
+    vna = manager.open_resource(resource_name)
+    vna.timeout = args.timeout_ms
+    print(vna.query("*IDN?").strip())
+    print(f"Available modes: {vna.query('INSTrument:CATalog?').strip()}")
+    operation_complete = vna.query('INST "NA";*OPC?').strip()
+    if not operation_complete.startswith("1"):
+        vna.close()
+        manager.close()
+        raise RuntimeError("The analyzer did not confirm network-analyzer mode")
+    return manager, vna
+
+
+def run_interactive(args: argparse.Namespace) -> None:
+    """Run the original prompt-driven two-port measurement workflow."""
+    output_directory = args.output_dir.resolve()
+    output_directory.mkdir(parents=True, exist_ok=True)
+    confirmation = input(
+        "Connect and power on the VNA, then enter y to continue: "
+    ).strip().lower()
+    if confirmation != "y":
+        print("Measurement cancelled.")
+        return
+
+    manager, vna = _open_vna(args)
+    try:
+        while True:
+            serial = input("Enter LNA serial number: ").strip()
+            if not serial:
+                print("A serial number is required.")
+                continue
+            if "/" in serial or "\\" in serial:
+                print("The serial number cannot contain path separators.")
+                continue
+            input("Connect the VNA to the LNA, then press Enter: ")
+            traces = {
+                parameter: measure_s_parameter(
+                    vna=vna,
+                    measurement=parameter,
+                    serial_num=serial,
+                    start_hz=args.start_hz,
+                    stop_hz=args.stop_hz,
+                    output_directory=output_directory,
+                    show_plots=not args.no_show,
+                )
+                for parameter in S_PARAMETERS
+            }
+            _save_measurement_set(
+                serial_num=serial,
+                traces=traces,
+                start_hz=args.start_hz,
+                stop_hz=args.stop_hz,
+                output_directory=output_directory,
+                show_plots=not args.no_show,
+            )
+            again = input(
+                "Test another LNA? Enter 1 to continue or 0 to finish: "
+            ).strip()
+            if again != "1":
+                break
+    finally:
+        vna.close()
+        manager.close()
     print("Thanks for testing with us!")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--visa-library",
+        help="VISA shared-library path; omit to let PyVISA select a backend",
+    )
+    parser.add_argument(
+        "--resource",
+        help="VISA resource name; omit to use the first discovered instrument",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("Results") / "LNA",
+        help="directory for Touchstone files and plots (default: Results/LNA)",
+    )
+    parser.add_argument("--start-hz", type=float, default=DEFAULT_START_HZ)
+    parser.add_argument("--stop-hz", type=float, default=DEFAULT_STOP_HZ)
+    parser.add_argument("--timeout-ms", type=int, default=10_000)
+    parser.add_argument(
+        "--no-show",
+        action="store_true",
+        help="save plots without opening interactive plot windows",
+    )
+    return parser
+
+
+def main() -> None:
+    """Parse command-line options and run the interactive acquisition."""
+    args = build_parser().parse_args()
+    if args.start_hz <= 0 or args.stop_hz <= args.start_hz:
+        raise SystemExit("--start-hz must be positive and less than --stop-hz")
+    run_interactive(args)
+
+
+if __name__ == "__main__":
+    main()

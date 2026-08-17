@@ -1,0 +1,46 @@
+ARCHIVAL AND RIGHTS NOTICE
+
+Repository: WVURAIL/Antenna_Test_Files
+
+This repository combines several categories of material:
+
+1. antenna measurement data in Touchstone format;
+2. plot images derived from measurements;
+3. acquisition, plotting, and validation software;
+4. laboratory procedure and archival documentation; and
+5. instrument names, commands, and documentation references associated
+   with third parties.
+
+These categories may have different creators and rights holders. The
+available history does not establish that one person or organization had
+authority to license every category. Accordingly, the current LICENSE
+does not make a new repository-wide grant. Confirm ownership and obtain
+permission for the particular material and intended use where required.
+
+The Git history attributes repository contributions to Joseph Shepard,
+Pranav Sanghavi, Kholoud Khairy, Kevin Bandura, Dylan Gormley, and the
+WVURAIL/radiolabwvu organization account. CONTRIBUTORS.md summarizes the
+available evidence and its limitations. Commit attribution does not, by
+itself, establish measurement operation, scientific authorship, or
+ownership.
+
+Commit c58a019127a291ce088e26e93aa42ecaedd9d9eb placed CC0 1.0 Universal
+legal code at the repository root. The present rights notice cannot and
+does not purport to revoke any CC0 waiver or license that was validly made
+and effective. It records that the authority and component-level scope of
+that historical notice have not been confirmed.
+
+Legacy source files may reproduce or closely track explanatory material
+from Keysight instrument programming documentation in addition to using
+standard instrument command names. Such third-party material is excluded
+from any rights claim or permission made by this repository. Consult the
+applicable Keysight documentation and terms for authoritative information.
+Keysight and FieldFox are marks of their respective owner(s); their use
+here is descriptive and does not imply endorsement.
+
+Scientific integrity corrections made during archive preparation are
+documented in KNOWN_ISSUES.md and MANIFEST.csv. Raw numeric measurement
+rows were not silently rewritten. Quarantined corrupt artifacts are
+retained for provenance and are not valid scientific data.
+
+No endorsement, certification, calibration claim, or warranty is made.

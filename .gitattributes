@@ -1,0 +1,2 @@
+# Preserve the legacy Touchstone line endings without treating CR as whitespace errors.
+*.s1p whitespace=cr-at-eol
