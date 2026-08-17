@@ -1,2 +1,3 @@
-# Preserve the legacy Touchstone line endings without treating CR as whitespace errors.
-*.s1p whitespace=cr-at-eol
+# Touchstone files are scientific data. Preserve each file's recorded byte form
+# across platforms while allowing legacy CRLF endings in whitespace checks.
+*.s1p -text whitespace=cr-at-eol

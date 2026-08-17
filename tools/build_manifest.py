@@ -78,8 +78,18 @@ def source_snapshot(repo: Path, base_ref: str) -> dict[str, bytes]:
     )
     if exists.returncode:
         return {}
+    # ``git archive`` otherwise honors the caller's ``core.autocrlf`` setting,
+    # which makes historical hashes platform-dependent for legacy text data.
     archive = subprocess.run(
-        ["git", "archive", "--format=tar", base_ref, "Results"],
+        [
+            "git",
+            "-c",
+            "core.autocrlf=false",
+            "archive",
+            "--format=tar",
+            base_ref,
+            "Results",
+        ],
         cwd=repo,
         check=True,
         stdout=subprocess.PIPE,
