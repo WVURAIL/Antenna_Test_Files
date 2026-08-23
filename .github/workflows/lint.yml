@@ -1,0 +1,52 @@
+name: Validate archive
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Manifest provenance compares current artifacts with the archive's
+          # pre-correction base commit, so CI needs the complete history.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile Python utilities
+        run: >-
+          python -m compileall -q
+          Measure_S.py
+          Measure_S11.py
+          graph_Multi_Networks.py
+          plot2networks.py
+          tools
+
+      # This validator uses only the standard library unless Pillow is already
+      # available. It never imports the hardware acquisition dependencies.
+      - name: Validate archived data and manifest
+        run: python tools/validate_archive.py
+
+      - name: Install flake8
+        run: python -m pip install flake8
+
+      # Error-level checks only: syntax errors and undefined names. These are
+      # things that are broken regardless of style, so this gate is meaningful
+      # without connecting a network analyzer.
+      - name: Check for syntax errors and undefined names
+        run: >-
+          flake8 Measure_S.py Measure_S11.py graph_Multi_Networks.py
+          plot2networks.py tools --count --select=E9,F63,F7,F82
+          --show-source --statistics
+
+      # Style is reported but never fails the build.
+      - name: Style report (advisory)
+        run: >-
+          flake8 Measure_S.py Measure_S11.py graph_Multi_Networks.py
+          plot2networks.py tools --count --exit-zero --max-complexity=10
+          --max-line-length=127 --statistics

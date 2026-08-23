@@ -1,0 +1,15 @@
+ARCHIVAL NOTICE
+
+Repository: WVURAIL/Antenna_Test_Files
+
+This archive contains antenna measurements, derived plots, legacy
+software, and laboratory procedure documentation.
+
+See LICENSE for rights status, including the historical CC0 notice and
+third-party material; CONTRIBUTORS.md for Git attribution; KNOWN_ISSUES.md
+for scientific caveats and corrections; and MANIFEST.csv for file hashes
+and provenance.
+
+Numeric measurement rows were preserved during archive preparation.
+Corrupt artifacts remain quarantined for provenance. No endorsement,
+certification, calibration claim, warranty, or support is provided.

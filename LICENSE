@@ -1,0 +1,50 @@
+REPOSITORY LICENSING STATUS
+
+No repository-wide license has been established for the current snapshot
+of this repository.
+
+Subject to any rights validly waived or licensed under the historical
+notice described below, and unless a particular file or component contains
+a separate license notice, the copyright, database, and related rights in
+that material remain with their respective owner(s). No permission to copy,
+modify, redistribute, or create derivative works is granted by this file
+beyond permissions provided by applicable law. Users must identify the
+relevant owner(s) and obtain any permission required for their intended use.
+
+The scientific measurements, derived plot images, original software, and
+third-party material may have different owners and require different
+licensing treatment. Their inclusion in one Git repository does not make
+their rights status uniform.
+
+HISTORICAL CC0 NOTICE
+
+A public repository revision dated 2026-08-14, formerly identified as
+commit c58a019127a291ce088e26e93aa42ecaedd9d9eb, added a CC0 1.0 Universal
+legal-code file at the repository root. Replacing that root file during
+archive preparation does not purport to retract, revoke, or narrow any
+waiver or license that was validly made and became effective under CC0.
+The referenced legal code is available from
+https://creativecommons.org/publicdomain/zero/1.0/legalcode.
+The scope and effectiveness of that historical notice depend, among other
+things, on which rights the person applying it was authorized to waive or
+license. Users who intend to rely on that historical notice must
+independently determine whether it covers the specific material and rights
+they wish to use.
+
+THIRD-PARTY MATERIAL AND MARKS
+
+Legacy scripts may contain instrument command names, interface
+descriptions, or explanatory material derived from Keysight Technologies
+documentation. No rights in Keysight documentation, software, product
+names, or trademarks are granted by this repository. Keysight and
+FieldFox are marks of their respective owner(s). Other third-party rights
+and marks likewise remain with their respective owner(s).
+
+NO WARRANTY
+
+The repository is preserved as historical research material and is
+provided as-is, without warranties or representations concerning
+accuracy, completeness, title, non-infringement, merchantability, fitness
+for a particular purpose, instrument safety, or scientific suitability.
+
+See NOTICE, CONTRIBUTORS.md, and KNOWN_ISSUES.md for additional context.

@@ -1,40 +1,60 @@
-import numpy as np
-import os 
-import skrf as rf
+"""Plot the same S-parameter from any number of Touchstone files."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
 import matplotlib.pyplot as plt
-import time
-import pyvisa as visa
-import csv
-import time
-import base64
-from github import Github
-from github import InputGitTreeElement
-
-from skrf import Network
-
-nw2 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\ANT1351H_P1.s1p')
-nw3 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\ANT1351H_Covered_P1.s1p')
-nw4 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_1_P1.s1p')
-nw5 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_2_P1.s1p')
-nw6 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_3_P1.s1p')
-nw7 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_4_P1.s1p')
-
-nw8 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\ANT1351H_P2.s1p')
-nw9 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\ANT1351H_Covered_P2.s1p')
-nw10 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_1_P2.s1p')
-nw11 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_2_P2.s1p')
-nw12 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_3_P2.s1p')
-nw13 = Network('C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Touchstone_Files\\Covered_4_P2.s1p')
+import skrf as rf
 
 
-serial_num_2 = "ANT1351H_P2"
-plt.title(f"{serial_num_2} covered vs. Uncovered")
+def build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("files", type=Path, nargs="+", help="Touchstone input files")
+    parser.add_argument(
+        "--labels",
+        nargs="+",
+        help="legend labels in the same order as the input files",
+    )
+    parser.add_argument("--title", help="plot title")
+    parser.add_argument("--output", type=Path, help="optional output image path")
+    parser.add_argument("--m", type=int, default=0, help="output-port index")
+    parser.add_argument("--n", type=int, default=0, help="input-port index")
+    parser.add_argument(
+        "--no-show",
+        action="store_true",
+        help="save without opening an interactive plot window",
+    )
+    return parser
 
-plot2 = nw8.plot_s_db(m=0,n=0, label='Uncovered')
-plot2 = nw9.plot_s_db(m=0,n=0, label='Covered_1')
-plot2 = nw10.plot_s_db(m=0,n=0, label='Covered_2')
-plot2 = nw11.plot_s_db(m=0,n=0, label='Covered_3')
-plot2 = nw12.plot_s_db(m=0,n=0, label='Covered_4')
-plot2 = nw13.plot_s_db(m=0,n=0, label='Covered_5')
-plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\Smith_Charts\\{serial_num_2}multi_comparison.jpg")
-plt.show()
+
+def main() -> None:
+    """Load the requested networks and plot them together."""
+    args = build_parser().parse_args()
+    if args.labels and len(args.labels) != len(args.files):
+        raise SystemExit("--labels must provide exactly one label per input file")
+
+    labels = args.labels or [path.stem for path in args.files]
+    figure, axis = plt.subplots()
+    for path, label in zip(args.files, labels):
+        network = rf.Network(str(path))
+        if args.m >= network.nports or args.n >= network.nports:
+            raise SystemExit(
+                f"{path} has {network.nports} port(s), so S{args.m + 1}{args.n + 1} "
+                "is unavailable"
+            )
+        network.plot_s_db(m=args.m, n=args.n, label=label, ax=axis)
+
+    axis.set_title(args.title or "S-parameter comparison")
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        figure.savefig(args.output, bbox_inches="tight")
+    if not args.no_show:
+        plt.show()
+    plt.close(figure)
+
+
+if __name__ == "__main__":
+    main()
