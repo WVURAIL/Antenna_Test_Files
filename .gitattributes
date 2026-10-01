@@ -1,0 +1,3 @@
+# Touchstone files are scientific data. Preserve each file's recorded byte form
+# across platforms while allowing legacy CRLF endings in whitespace checks.
+*.s1p -text whitespace=cr-at-eol

@@ -1,5 +1,5 @@
 !Created with skrf (http://scikit-rf.org).
-# GHz S RI R 50.0 
+# Hz S RI R 50.0
 !freq ReS11 ImS11
 10000000.0 -0.7945802705 0.5997096549
 19950000.0 -0.2873285351 0.9396030845

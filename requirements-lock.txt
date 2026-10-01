@@ -1,0 +1,19 @@
+# Tested archive-maintenance environment (Python 3.12, 2026-08-16).
+# The acquisition scripts still require a separately installed VISA backend
+# and compatible instrument drivers.
+contourpy==1.3.3
+cycler==0.12.1
+fonttools==4.63.0
+kiwisolver==1.5.0
+matplotlib==3.11.1
+numpy==2.5.2
+packaging==26.3
+pandas==3.0.5
+pillow==12.3.0
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+PyVISA==1.16.2
+scikit-rf==1.13.0
+scipy==1.18.0
+six==1.17.0
+typing_extensions==4.16.0
