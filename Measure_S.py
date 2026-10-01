@@ -182,7 +182,7 @@ while i == "1":
         nw3.write_touchstone(filename = f"{serial_num_1}_S12",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
         nw4.write_touchstone(filename = f"{serial_num_1}_S21",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
         nw5.write_touchstone(filename = f"{serial_num_1}_S22",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
-        s = np.zeros((len(f), 2, 2))
+        s = np.zeros((len(f), 2, 2), dtype=complex)
         s[:,0,0] = S11_raw
         s[:,0,1] = S12_raw
         s[:,1,0] = S21_raw
