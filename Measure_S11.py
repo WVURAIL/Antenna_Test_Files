@@ -65,7 +65,7 @@ def measure_s_parameter(measurement, output_power,serial_num, start_freq, stop_f
     plt.figure()
     plt.plot(np.linspace(start_freq/1e6,stop_freq/1e6,data.shape[-1]),data)
     plt.xlabel("MHz")
-    plt.ylabel("dBm")
+    plt.ylabel("dB")
     plt.title(f"{measurement}_{serial_num}")
     print(f"DONE measuring {measurement}")
     #plt.savefig(f"C:\\Users\\RadioLab\\Enigma_Testing_2022\\Antenna_Test_Files\\Results\\S11_Plots\\{measurement}_{serial_num}.png")

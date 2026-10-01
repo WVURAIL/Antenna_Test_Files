@@ -65,7 +65,7 @@ def measure_s_parameter(measurement, output_power,serial_num, start_freq, stop_f
     plt.figure()
     plt.plot(np.linspace(start_freq/1e6,stop_freq/1e6,data.shape[-1]),data)
     plt.xlabel("MHz")
-    plt.ylabel("dBm")
+    plt.ylabel("dB")
     plt.title(f"{measurement}_{serial_num}")
     print(f"DONE measuring {measurement}")
     plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA\\{measurement}_{serial_num}.png")
@@ -188,7 +188,7 @@ while i == "1":
         s[:,1,0] = S21_raw
         s[:,1,1] = S22_raw
         nw6 = rf.Network(name=f"{serial_num_1}_S22",s=s,frequency=f, z0=50)
-        serial_num_2 = "Bandura_LNA"
+        serial_num_2 = serial_num_1
         nw6.write_touchstone(filename = f"{serial_num_1}",dir= 'C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA')
         plt.title(f"{serial_num_2} S Parameters")
 
@@ -196,7 +196,7 @@ while i == "1":
         plot2 = nw3.plot_s_db(m=0,n=0, label='S12')
         plot2 = nw4.plot_s_db(m=0,n=0, label='S21')
         plot2 = nw5.plot_s_db(m=0,n=0, label='S22')
-        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA\\{serial_num_2}multi_comparison.jpg")
+        plt.savefig(f"C:\\Users\\RadioLab\\Desktop\\Enigma_Testing\\LNA\\{serial_num_2}_multi_comparison.jpg")
         plt.show()
         
         
